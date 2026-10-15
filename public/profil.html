@@ -1817,7 +1817,7 @@
     </div>
 
 <script type="module">
-    import { collection, getDocs, getDoc, doc, query, where } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    import { collection, getDocs, getDoc, doc, query, where, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
     import { db } from '/firebase-config.js'; 
 
     // =========================================================================
@@ -2236,6 +2236,45 @@
                             pNotice.innerText = '⚠️ PRATINJAU DESAIN (Status Asli Website: Sedang Ditutup di Pengaturan)';
                             document.body.prepend(pNotice);
                         }
+                    }
+                }
+
+                // Proteksi dan Batasan Kunjungan Harian Khusus Web Public Profil
+                if (!isPreviewMode && ownerUid) {
+                    const tier = String(data.paketAktif || 'Standar').toLowerCase();
+                    const limitsMap = {
+                        standar: 10,
+                        pro: 50,
+                        ultimate: 200
+                    };
+                    const maxVisits = limitsMap[tier] || 10;
+                    const lastReset = Number(data.lastResetDate) || 0;
+                    const now = Date.now();
+                    const isToday = new Date(lastReset).toDateString() === new Date(now).toDateString();
+                    const currentVisits = isToday ? (Number(data.visitsToday) || 0) : 0;
+
+                    if (currentVisits >= maxVisits) {
+                        document.body.innerHTML = `
+                            <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:100vh; background:#0F172A; color:#F8FAFC; text-align:center; padding:20px; font-family:'Plus Jakarta Sans',sans-serif;">
+                                <div style="max-width:480px; background:#1E293B; padding:36px; border-radius:24px; border:1px solid #334155; box-shadow:0 20px 40px rgba(0,0,0,0.5);">
+                                    <div style="font-size:42px; margin-bottom:16px;">⏱️</div>
+                                    <h2 style="color:#F43F5E; font-size:22px; font-weight:800; margin-bottom:10px;">Batas Kunjungan Harian Tercapai</h2>
+                                    <p style="font-size:14px; color:#94A3B8; line-height:1.6; margin-bottom:24px;">Website dan halaman portofolio <b>${data.namaBrand || 'Studio'}</b> telah mencapai batas kuota kunjungan publik harian untuk hari ini. Silakan kunjungi kembali besok atau hubungi kami melalui WhatsApp.</p>
+                                    ${data.noWhatsApp ? `<a href="https://wa.me/${data.noWhatsApp}" style="display:inline-block; padding:12px 24px; background:#25D366; color:white; border-radius:12px; text-decoration:none; font-weight:bold; font-size:14px; box-shadow:0 4px 12px rgba(37,211,102,0.3);">Chat WhatsApp Admin</a>` : ''}
+                                </div>
+                            </div>
+                        `;
+                        return;
+                    }
+
+                    // Increment kuota kunjungan harian hanya untuk pengunjung web public profil
+                    try {
+                        await updateDoc(doc(db, "owners", ownerUid), {
+                            visitsToday: currentVisits + 1,
+                            lastResetDate: isToday ? lastReset : now
+                        });
+                    } catch (eVisitInc) {
+                        console.warn("Increment visits skipped:", eVisitInc);
                     }
                 }
 

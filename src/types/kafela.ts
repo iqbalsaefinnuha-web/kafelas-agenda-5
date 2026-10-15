@@ -1,36 +1,4 @@
-export interface Transaksi {
-    id: string;
-    laundryId: string;
-    namaPelanggan: string;
-    nomorTransaksi?: string;
-    tanggalMasuk: number;
-    tanggalPengambilan?: number;
-    totalHarga: number;
-    jumlahDp?: number;
-    statusPembayaran: 'Lunas' | 'DP' | 'Belum Bayar';
-    metodePembayaran: 'Tunai' | 'Non-Tunai';
-}
-
-export interface Pengeluaran {
-    id: string;
-    laundryId: string;
-    tanggal: number;
-    keterangan: string;
-    jumlah: number;
-}
-
-export interface ArusKas {
-    timestamp: number;
-    keterangan: string;
-    jumlahMasuk: number;
-    jumlahKeluar: number;
-    metodePembayaran?: string;
-    transaksiId?: string;
-    logType: 'MASUK' | 'DIAMBIL' | 'BIAYA' | 'KAS';
-    badgeText?: string;
-    infoLog?: string;
-}
-
+export interface AttireModel {
   cpwModel?: string;
   cpwUkuran?: string;
   cppModel?: string;
